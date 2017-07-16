@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+    <title>CLICK HANDLER</title>
+    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        var map,vectorLayer,selectMarkerControl,selectedFeature;
+        var lat             =  40.969381 ;
+        var lon            =    28.971057;
+        var zoom        =   5;
+        var curpos = new Array();
+        var position;
+
+            var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+            var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+
+            var cntrposition       = new OpenLayers.LonLat(lon, lat).transform( fromProjection, toProjection);
+
+        function init()
+        {
+                map = new OpenLayers.Map("Map",{
+                            controls: 
+                            [
+                                        new OpenLayers.Control.PanZoomBar(),                        
+                            new OpenLayers.Control.LayerSwitcher({}),
+                            new OpenLayers.Control.Permalink(),
+                            new OpenLayers.Control.MousePosition({}),
+                            new OpenLayers.Control.ScaleLine(),
+                            new OpenLayers.Control.OverviewMap(),
+                                    ]
+                              }
+                                );
+                var mapnik      = new OpenLayers.Layer.OSM("MAP"); 
+                var markers     = new OpenLayers.Layer.Markers( "Markers" );
+
+            map.addLayers([mapnik,markers]);
+            map.addLayer(mapnik);
+            map.setCenter(cntrposition, zoom);
+
+            markers.addMarker(new OpenLayers.Marker(cntrposition));
+
+            var click = new OpenLayers.Control.Click();
+            map.addControl(click);
+
+            click.activate();
+};
+
+OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {               
+ defaultHandlerOptions: {
+  'single': true,
+  'double': false,
+  'pixelTolerance': 0,
+  'stopSingle': false,
+  'stopDouble': false
+ },
+
+ initialize: function(options) {
+  this.handlerOptions = OpenLayers.Util.extend(
+   {}, this.defaultHandlerOptions
+  );
+  OpenLayers.Control.prototype.initialize.apply(
+   this, arguments
+  );
+  this.handler = new OpenLayers.Handler.Click(
+   this, {
+    'click': this.trigger
+   }, this.handlerOptions
+  );
+ },
+
+ trigger: function(e) {
+  var lonlat = map.getLonLatFromPixel(e.xy);
+  lonlat1= new OpenLayers.LonLat(lonlat.lon,lonlat.lat).transform(toProjection,fromProjection);
+  //alert("Hello..."+lonlat1.lon + "  " +lonlat1.lat);
+  
+
+  var str1 = "http://api.openweathermap.org/data/2.5/forecast?lat=";
+  var str2 =lonlat1.lat;
+  var str3 = "&lon=";
+  var str4 = lonlat1.lon;
+  lon = lonlat1.lon;
+  lat = lonlat1.lat;
+  var str5 = "&appid=56652672db6e996ee84dc5615e92f718";
+  var res = str1.concat(str2, str3 , str4 , str5);
+  console.log(res);
+  document.location = res;
+ }
+});
+
+var app = angular
+.module("persModul", [])
+.controller("persController", function ($scope, $http) {
+ 
+/*başka sayfadaki veriyi okuma için kullanıyoruz.*/
+$http.get(res)
+.then(function (gelen) {
+ 
+ 
+/*gelen değişkeni içindeki veriye data özelliği ile ulaşılır*/
+/*$scope.personeller özelliğine gelen veriyi yerleştirip modeli oluşturmuş olduk. */
+ 
+$scope.personeller = gelen.data;
+});
+ 
+ 
+});
+
+</script>
+</head>
+
+<body onload='init();' ng-app="persModul">
+    <div id="Map" style="height: 550px" ></div>
+ <div ng-controller="persController">
+ 
+<table border=1 class="table table-striped">
+<thead class="thead-inverse">
+<tr>
+<th scope="row">Bolge</th>
+<th scope="row">Id</th>
+<th scope="row">il</th>
+<th scope="row">ilce</th>
+<th scope="row">Plaka</th>
+</tr>
+</thead>
+<tbody>
+<tr ng-repeat="personel in personeller">
+<td> {{ personel.cod }} </td>
+<td> {{ }} </td>
+<td> {{ personel.il }} </td>
+<td> {{ personel.ilce }} </td>
+<td> {{ personel.plaka }} </td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+</body>
+
+</html>

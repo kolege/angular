@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html ng-app="demoapp">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <script src="leaflet/leaflet.js"></script>
+    <script src="leaflet/angular-leaflet-directive.js"></script>
+    <link rel="stylesheet" href="leaflet/leaflet.css" />
+    <script>
+        var app = angular.module("demoapp", ["leaflet-directive"]);
+        app.controller('MarkersSimpleController', function($scope, $http) {
+            var res="";
+            var mainMarker = {
+                lat: 51,
+                lng: 0,
+                focus: true,
+                message: "Hey, drag me if you want",
+                draggable: true
+            };
+
+            angular.extend($scope, {
+                london: {
+                    lat: 51.505,
+                    lng: -0.09,
+                    zoom: 8
+                },
+                markers: {
+                    mainMarker: angular.copy(mainMarker)
+                },
+                position: {
+                    lat: 51,
+                    lng: 0
+                },
+                events: { // or just {} //all events
+                    markers:{
+                      enable: [ 'dragend' ]
+                      //logic: 'emit'
+                    }
+                }
+            });
+
+            $scope.$on("leafletDirectiveMarker.dragend", function(event, args){
+                $scope.position.lat = args.model.lat;
+                $scope.position.lng = args.model.lng;
+                var str1 = "http://api.openweathermap.org/data/2.5/forecast?lat=";
+                var str2 =args.model.lat;
+                var str3 = "&lon=";
+                var str4 = args.model.lng;
+                var str5 = "&appid=56652672db6e996ee84dc5615e92f718";
+                res = str1.concat(str2, str3 , str4 , str5);
+                //document.location = res;
+                $scope.al();
+            });
+
+            $scope.al=function(){
+              /*var islem = $http({
+              method: "get",
+              url: "http://cksyazilim.xyz/andro/topics.php"
+              });
+              islem.success(function (data) {
+              $scope.personeller=data;
+              });
+*/
+              //console.log(res);
+
+              $http.get(res).
+              then(function(response) {
+                $scope.weather=response.data.list;
+                console.log("list", $scope.weather);
+              }, function(response) {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+              });
+            }
+
+            //$scope.al();
+
+
+        });
+    </script>
+  </head>
+  <body ng-controller="MarkersSimpleController">
+    <!-- <leaflet lf-center="london" markers="markers" height="480px" width="100%"></leaflet> EVENTS WILL STILL FIRE but all will for each directive-->
+    <!-- NOTICE events attribute is optional it is more for options in whitelisting (enable), blacklisting (disable), and logic (emit or broadcast)  -->
+    <leaflet lf-center="london" event-broadcast="events" markers="markers" height="480px" width="100%"></leaflet>
+
+    <table>
+    <!--<input type="number" step="1"  ng-model="satirSayisi" max="20" min="0" /> -->
+    <thead>
+    <tr>
+    <th>Temperatura</th>
+    <th>Cloud</th>
+    <th>Timestamp</th>
+    <th>Pressure</th>
+    <th>Temp_Max</th>
+    </tr>
+    </thead>
+    <tbody>
+    	<tr ng-repeat="today in weather">
+    		<td>{{today.main.temp-273}}</td>
+    		<td>{{today.clouds.all}}</td>
+    		<td>{{today.dt}}</td>
+    		<td>{{today.main.pressure}}</td>
+    		<td>{{today.main.temp_max-273}}</td>
+    	</tr>
+      <input type="button" ng-click="next()" value="İleri" />
+      <input type="button" ng-click="prev()" value="Geri" />
+    </tbody>
+    </table>
+
+
+    </p>
+  </body>
+</html>
